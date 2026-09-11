@@ -1,0 +1,395 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: NetSentry AI local security operations API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: alerts
+    description: Snort intrusion detection alerts
+  - name: insights
+    description: AI-generated alert analysis
+  - name: machines
+    description: Monitored company machines
+  - name: dashboard
+    description: Dashboard aggregates
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Security dashboard aggregate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /alerts:
+    get:
+      operationId: listAlerts
+      tags: [alerts]
+      summary: List recent security alerts
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: severity
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recent alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+    post:
+      operationId: createAlert
+      tags: [alerts]
+      summary: Create a Snort alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertInput"
+      responses:
+        "201":
+          description: Created alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+  /alerts/{id}:
+    patch:
+      operationId: updateAlert
+      tags: [alerts]
+      summary: Update an alert
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertUpdate"
+      responses:
+        "200":
+          description: Updated alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteAlert
+      tags: [alerts]
+      summary: Delete an alert
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /alerts/{id}/analyze:
+    post:
+      operationId: analyzeAlert
+      tags: [alerts, insights]
+      summary: Analyze a Snort alert
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Created alert insight
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Insight"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /insights:
+    get:
+      operationId: listInsights
+      tags: [insights]
+      summary: List recent alert insights
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Recent insights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Insight"
+  /machines:
+    get:
+      operationId: listMachines
+      tags: [machines]
+      summary: List monitored machines
+      responses:
+        "200":
+          description: Monitored machines
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonitoredMachine"
+    post:
+      operationId: createMachine
+      tags: [machines]
+      summary: Add a monitored machine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MachineInput"
+      responses:
+        "201":
+          description: Created machine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonitoredMachine"
+  /machines/{id}:
+    patch:
+      operationId: updateMachine
+      tags: [machines]
+      summary: Update a monitored machine
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MachineUpdate"
+      responses:
+        "200":
+          description: Updated machine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonitoredMachine"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteMachine
+      tags: [machines]
+      summary: Delete a monitored machine
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    Alert:
+      type: object
+      required: [id, signature, signatureId, classification, priority, severity, sourceIp, destIp, protocol, status, detectedAt]
+      properties:
+        id: { type: string }
+        signature: { type: string }
+        signatureId: { type: string }
+        classification: { type: string }
+        priority: { type: integer, minimum: 1, maximum: 4 }
+        severity:
+          type: string
+          enum: [critical, high, medium, low, info]
+        sourceIp: { type: string }
+        sourcePort: { type: ["integer", "null"] }
+        destIp: { type: string }
+        destPort: { type: ["integer", "null"] }
+        protocol:
+          type: string
+          enum: [TCP, UDP, ICMP, IP]
+        rawLog: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [new, analyzed, resolved, false_positive]
+        detectedAt: { type: string, format: date-time }
+    AlertInput:
+      type: object
+      required: [signature, sourceIp, destIp]
+      properties:
+        signature: { type: string, minLength: 1 }
+        signatureId: { type: string }
+        classification: { type: string }
+        priority: { type: integer, minimum: 1, maximum: 4, default: 2 }
+        severity:
+          type: string
+          enum: [critical, high, medium, low, info]
+          default: medium
+        sourceIp: { type: string, minLength: 1 }
+        sourcePort: { type: ["integer", "null"] }
+        destIp: { type: string, minLength: 1 }
+        destPort: { type: ["integer", "null"] }
+        protocol:
+          type: string
+          enum: [TCP, UDP, ICMP, IP]
+          default: TCP
+        rawLog: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [new, analyzed, resolved, false_positive]
+        detectedAt: { type: string, format: date-time }
+    AlertUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, analyzed, resolved, false_positive]
+        severity:
+          type: string
+          enum: [critical, high, medium, low, info]
+    Insight:
+      type: object
+      required: [id, alertId, analysis, attackType, riskScore, confidence, indicators, recommendation, modelVersion, createdAt]
+      properties:
+        id: { type: string }
+        alertId: { type: string }
+        analysis: { type: string }
+        attackType: { type: string }
+        riskScore: { type: integer, minimum: 0, maximum: 100 }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        recommendation: { type: string }
+        indicators:
+          type: array
+          items: { type: string }
+        modelVersion: { type: string }
+        createdAt: { type: string, format: date-time }
+    MonitoredMachine:
+      type: object
+      required: [id, ipAddress, hostname, status]
+      properties:
+        id: { type: string }
+        ipAddress: { type: string }
+        hostname: { type: string }
+        department: { type: ["string", "null"] }
+        os: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [active, inactive, maintenance]
+        notes: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    MachineInput:
+      type: object
+      required: [ipAddress, hostname]
+      properties:
+        ipAddress: { type: string, minLength: 1 }
+        hostname: { type: string, minLength: 1 }
+        department: { type: string }
+        os: { type: string }
+        status:
+          type: string
+          enum: [active, inactive, maintenance]
+          default: active
+        notes: { type: string }
+    MachineUpdate:
+      type: object
+      properties:
+        ipAddress: { type: string, minLength: 1 }
+        hostname: { type: string, minLength: 1 }
+        department: { type: string }
+        os: { type: string }
+        status:
+          type: string
+          enum: [active, inactive, maintenance]
+        notes: { type: string }
+    DashboardSummary:
+      type: object
+      required: [totalAlerts, highSeverity, analyzed, insights, avgRiskScore, avgConfidence, severityCounts, attackTypes]
+      properties:
+        totalAlerts: { type: integer }
+        highSeverity: { type: integer }
+        analyzed: { type: integer }
+        insights: { type: integer }
+        avgRiskScore: { type: number }
+        avgConfidence: { type: number }
+        severityCounts:
+          type: object
+          additionalProperties: { type: integer }
+        attackTypes:
+          type: array
+          items:
+            type: object
+            required: [name, count]
+            properties:
+              name: { type: string }
+              count: { type: integer }
+

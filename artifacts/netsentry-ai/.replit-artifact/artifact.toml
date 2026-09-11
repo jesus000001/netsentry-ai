@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "NetSentry AI"
+description = "A local cybersecurity operations workspace for monitoring Snort alerts, analyzing threats with AI, managing company machines, and reviewing security insights."
+version = "1.0.0"
+id = "artifacts/netsentry-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19601
+
+[services.development]
+run = "pnpm --filter @workspace/netsentry-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/netsentry-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/netsentry-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19601"
+BASE_PATH = "/"

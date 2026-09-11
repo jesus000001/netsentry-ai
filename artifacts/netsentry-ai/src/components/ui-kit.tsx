@@ -1,0 +1,14 @@
+import { AlertCircle, CheckCircle2, Loader2, RefreshCcw } from 'lucide-react';
+import type { ReactNode } from 'react';
+
+export function PageTitle({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
+  return <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><div className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[.24em] text-violet-300">{eyebrow}</div><h1 className="text-2xl font-extrabold tracking-tight text-slate-100 sm:text-3xl">{title}</h1>{description && <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{description}</p>}</div>{action}</div>;
+}
+export function Surface({ children, className = '' }: { children: ReactNode; className?: string }) { return <section className={`glass-panel rounded-2xl ${className}`}>{children}</section>; }
+export function Skeleton({ className = '' }: { className?: string }) { return <div className={`animate-pulse rounded-lg bg-slate-800/80 ${className}`} />; }
+export function LoadingBlock() { return <div className="space-y-3"><Skeleton className="h-5 w-32" /><Skeleton className="h-28 w-full" /><Skeleton className="h-20 w-full" /></div>; }
+export function ErrorBlock({ retry }: { retry?: () => void }) { return <div className="flex items-center justify-between rounded-xl border border-rose-400/20 bg-rose-400/5 p-4 text-sm text-rose-200"><span className="flex items-center gap-2"><AlertCircle size={16} /> Local API could not be reached.</span>{retry && <button data-testid="button-retry" onClick={retry} className="flex items-center gap-2 rounded-lg border border-rose-300/20 px-3 py-1.5 text-xs hover:bg-rose-400/10"><RefreshCcw size={13} /> Retry</button>}</div>; }
+export function EmptyBlock({ title, body }: { title: string; body: string }) { return <div className="grid min-h-40 place-items-center rounded-xl border border-dashed border-slate-700 p-6 text-center"><div><CheckCircle2 className="mx-auto mb-3 text-slate-600" size={22} /><div className="text-sm font-semibold text-slate-300">{title}</div><div className="mt-1 text-xs text-slate-500">{body}</div></div></div>; }
+export function Busy({ label = 'Working' }: { label?: string }) { return <span className="inline-flex items-center gap-2"><Loader2 size={14} className="animate-spin" />{label}</span>; }
+export function formatTime(value?: string) { if (!value) return '—'; return new Date(value).toLocaleString([], { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+export function severityClass(value?: string) { return value === 'critical' ? 'text-rose-300 bg-rose-400/10 border-rose-400/20' : value === 'high' ? 'text-amber-300 bg-amber-400/10 border-amber-400/20' : value === 'medium' ? 'text-sky-300 bg-sky-400/10 border-sky-400/20' : 'text-slate-300 bg-slate-400/10 border-slate-400/20'; }
