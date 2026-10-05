@@ -11,6 +11,7 @@ import Logs from '@/pages/logs';
 import AiModel from '@/pages/ai-model';
 import Analysis from '@/pages/analysis';
 import Machines from '@/pages/machines';
+import Agents from '@/pages/agents';
 import Auth from '@/pages/auth';
 import { WorkspaceShell } from '@/components/netsentry-shell';
 import {
@@ -40,6 +41,7 @@ function Router() {
               <Route path="/ai-model" component={AiModel} />
               <Route path="/analysis" component={Analysis} />
               <Route path="/machines" component={Machines} />
+              <Route path="/agents" component={Agents} />
               <Route component={NotFound} />
             </Switch>
           </WorkspaceShell>

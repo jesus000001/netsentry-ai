@@ -11,6 +11,7 @@ const nav = [
   { href: '/ai-model', label: 'AI model', icon: BrainCircuit },
   { href: '/analysis', label: 'Analysis', icon: FileCode2 },
   { href: '/machines', label: 'Machines', icon: Server },
+  { href: '/agents', label: 'Agents', icon: Radio },
 ];
 
 export function WorkspaceShell({ children }: { children: ReactNode }) {

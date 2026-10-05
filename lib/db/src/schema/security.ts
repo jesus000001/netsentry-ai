@@ -5,6 +5,7 @@ import {
   timestamp,
   pgTable,
 } from "drizzle-orm/pg-core";
+
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -22,8 +23,12 @@ export const alertsTable = pgTable("alerts", {
   protocol: text("protocol").notNull().default("TCP"),
   rawLog: text("raw_log"),
   status: text("status").notNull().default("new"),
-  detectedAt: timestamp("detected_at", { withTimezone: true }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  detectedAt: timestamp("detected_at", {
+    withTimezone: true,
+  }).notNull(),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+  }).notNull().defaultNow(),
 });
 
 export const insightsTable = pgTable("insights", {
@@ -35,8 +40,12 @@ export const insightsTable = pgTable("insights", {
   confidence: real("confidence").notNull(),
   recommendation: text("recommendation").notNull(),
   indicators: text("indicators").array().notNull().default([]),
-  modelVersion: text("model_version").notNull().default("base44-sec-v1"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  modelVersion: text("model_version")
+    .notNull()
+    .default("base44-sec-v1"),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+  }).notNull().defaultNow(),
 });
 
 export const monitoredMachinesTable = pgTable("monitored_machines", {
@@ -47,25 +56,64 @@ export const monitoredMachinesTable = pgTable("monitored_machines", {
   os: text("os"),
   status: text("status").notNull().default("active"),
   notes: text("notes"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+  }).notNull().defaultNow(),
+});
+
+/*
+ * Commands sent by the NetSentry server
+ * to agents installed on monitored machines.
+ */
+export const agentCommandsTable = pgTable("agent_commands", {
+  id: text("id").primaryKey(),
+
+  machineId: text("machine_id").notNull(),
+
+  action: text("action").notNull(),
+
+  targetIp: text("target_ip").notNull(),
+
+  status: text("status").notNull().default("pending"),
+
+  result: text("result"),
+
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+  }).notNull().defaultNow(),
+
+  executedAt: timestamp("executed_at", {
+    withTimezone: true,
+  }),
 });
 
 export const insertAlertSchema = createInsertSchema(alertsTable).omit({
   id: true,
   createdAt: true,
 });
+
 export const insertInsightSchema = createInsertSchema(insightsTable).omit({
   id: true,
   createdAt: true,
 });
-export const insertMachineSchema = createInsertSchema(monitoredMachinesTable).omit({
+
+export const insertMachineSchema = createInsertSchema(
+  monitoredMachinesTable,
+).omit({
   id: true,
   createdAt: true,
 });
 
 export type Alert = typeof alertsTable.$inferSelect;
 export type InsertAlert = z.infer<typeof insertAlertSchema>;
+
 export type Insight = typeof insightsTable.$inferSelect;
-export type InsertInsight = z.infer<typeof insertInsightSchema>;
-export type MonitoredMachine = typeof monitoredMachinesTable.$inferSelect;
-export type InsertMachine = z.infer<typeof insertMachineSchema>;
+
+export type MonitoredMachine =
+  typeof monitoredMachinesTable.$inferSelect;
+
+export type InsertMachine =
+  z.infer<typeof insertMachineSchema>;
+
+export type AgentCommand =
+  typeof agentCommandsTable.$inferSelect;

@@ -1,15 +1,33 @@
 import { ArrowUpRight, BrainCircuit, CircleAlert, Gauge, ShieldAlert, Sparkles } from 'lucide-react';
 import { Link } from 'wouter';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { useGetDashboardSummary, useListAlerts, useListInsights, getGetDashboardSummaryQueryKey } from '@workspace/api-client-react';
+import { useGetDashboardSummary, useListAlerts, useListInsights, getGetDashboardSummaryQueryKey, getListAlertsQueryKey } from '@workspace/api-client-react';
 import { ErrorBlock, EmptyBlock, formatTime, LoadingBlock, PageTitle, severityClass, Skeleton, Surface } from '@/components/ui-kit';
 
 const trend = [{ t: '00:00', v: 8 }, { t: '04:00', v: 11 }, { t: '08:00', v: 18 }, { t: '12:00', v: 14 }, { t: '16:00', v: 27 }, { t: '20:00', v: 21 }, { t: 'Now', v: 32 }];
 
 export default function Overview() {
+  console.log("[NetSentry DEBUG] Overview mounted");
   const summary = useGetDashboardSummary({ query: { queryKey: getGetDashboardSummaryQueryKey() } });
-  const alerts = useListAlerts({ limit: 6 }, { query: { queryKey: ['/api/alerts', { limit: 6 }] } });
+  const alerts = useListAlerts(
+  { limit: 6 },
+  {
+    query: {
+      queryKey: getListAlertsQueryKey({ limit: 6 }),
+      refetchInterval: 5000,
+      refetchIntervalInBackground: true,
+    },
+  },
+);
   const insights = useListInsights({ limit: 3 }, { query: { queryKey: ['/api/insights', { limit: 3 }] } });
+
+  console.log('[NetSentry DEBUG] alerts:', {
+    isLoading: alerts.isLoading,
+    isError: alerts.isError,
+    error: alerts.error,
+    count: alerts.data?.length,
+    data: alerts.data,
+  });
   return <div className="animate-rise">
     <PageTitle eyebrow="Command center / live posture" title="Security overview" description="A fast read on what changed across your local sensor network." action={<Link href="/snort" data-testid="link-review-alerts" className="inline-flex items-center gap-2 rounded-lg bg-violet-500 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-violet-500/20 transition hover:bg-violet-400">Review alert feed <ArrowUpRight size={15} /></Link>} />
     {summary.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1,2,3,4].map(i => <Skeleton key={i} className="h-32" />)}</div> : summary.isError ? <ErrorBlock retry={() => summary.refetch()} /> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

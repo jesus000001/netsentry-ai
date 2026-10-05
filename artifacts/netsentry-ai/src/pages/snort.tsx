@@ -6,7 +6,20 @@ import { Busy, EmptyBlock, ErrorBlock, formatTime, PageTitle, severityClass, Sur
 
 export default function Snort() {
   const [search, setSearch] = useState(''); const [severity, setSeverity] = useState(''); const [expanded, setExpanded] = useState<string | null>(null); const qc = useQueryClient();
-  const query = useListAlerts({ limit: 100, search: search || undefined, severity: severity || undefined }, { query: { queryKey: getListAlertsQueryKey({ limit: 100, search: search || undefined, severity: severity || undefined }) } });
+  const query = useListAlerts(
+  { limit: 100, search: search || undefined, severity: severity || undefined },
+  {
+    query: {
+      queryKey: getListAlertsQueryKey({
+        limit: 100,
+        search: search || undefined,
+        severity: severity || undefined,
+      }),
+      refetchInterval: 5000,
+      refetchIntervalInBackground: true,
+    },
+  },
+);
   const analyze = useAnalyzeAlert(); const update = useUpdateAlert(); const remove = useDeleteAlert();
   const alerts = useMemo(() => query.data ?? [], [query.data]);
   const doAnalyze = (id: string) => analyze.mutate({ id }, { onSuccess: () => { qc.invalidateQueries({ queryKey: getListInsightsQueryKey({ limit: 100 }) }); qc.invalidateQueries({ queryKey: getListAlertsQueryKey({ limit: 100 }) }); } });
